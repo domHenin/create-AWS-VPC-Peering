@@ -1,31 +1,39 @@
-data "aws_ami" "linux_ami" {
-  provider    = aws.region-cloud_user
-  owners      = ["137112412989"]
-  most_recent = true
+data "aws_ssm_parameter" "linux_ami_alpha" {
+  # provider = aws.region-cloud_user
+  provider = aws.region-a
+  name     = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+}
 
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-kernel-5.10-hvm-*"]
+data "aws_ssm_parameter" "linux_ami_bravo" {
+  # provider = aws.region-cloud_user
+  provider = aws.region-b
+  name     = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+}
+
+
+resource "aws_instance" "container_alpha" {
+  # provider                    = aws.region-cloud_user
+  provider                    = aws.region-a
+  ami                         = data.aws_ssm_parameter.linux_ami_alpha.value
+  instance_type               = var.instance_type
+  associate_public_ip_address = true
+  # vpc_security_group_ids = []
+  subnet_id = aws_subnet.subnet_alpha.id
+
+  tags = {
+    "Name" = "container_alpha"
   }
 }
 
-resource "aws_instance" "linux_container" {
-  provider      = aws.region-cloud_user
-  count         = 1
-  instance_type = "t2.micro"
-  ami           = data.aws_ami.linux_ami.id
-  subnet_id     = aws_subnet.subnet_pub.id
-#   depends_on    = [aws_internet_gateway.igw]
-  #   associate_public_ip_address = true
-
-  #   connection {
-  #     type = "ssh"
-  #     user = "admin"
-  #   }
-
-  user_data = file("files/startup_script.bash")
+resource "aws_instance" "container_bravo" {
+  # provider                    = aws.region-cloud_user
+  provider                    = aws.region-b
+  ami                         = data.aws_ssm_parameter.linux_ami_bravo.value
+  instance_type               = var.instance_type
+  associate_public_ip_address = true
+  subnet_id                   = aws_subnet.subnet_bravo.id
 
   tags = {
-    "Name" = "devops-junction_instance-Public"
+    Name = "container_bravo"
   }
 }
