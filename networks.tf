@@ -42,3 +42,24 @@ resource "aws_subnet" "subnet_bravo" {
     "Name" = "subnet_bravo"
   }
 }
+
+
+#AWS VPC-Peering Connection
+resource "aws_vpc_peering_connection" "peering_connection" {
+  provider    = aws.region-a
+  peer_vpc_id = aws_vpc.vpc_bravo.id
+  vpc_id      = aws_vpc.vpc_alpha.id
+  peer_region = var.region-default_b
+
+  tags = {
+    "Name" = "vpc_peering_connection"
+  }
+}
+
+#AWS VPC-Peering Acceptor
+resource "aws_vpc_peering_connection_accepter" "peering_accepter" {
+  provider                  = aws.region-b
+  vpc_peering_connection_id = aws_vpc_peering_connection.peering_connection.id
+  auto_accept               = true
+
+}
